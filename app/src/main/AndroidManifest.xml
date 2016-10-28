@@ -18,6 +18,15 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".CreateActivity"
+            android:label="@string/title_activity_create"
+            android:parentActivityName=".NotesList"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.wacom.skomra.inkdemo.NotesList" />
+        </activity>
     </application>
 
 </manifest>

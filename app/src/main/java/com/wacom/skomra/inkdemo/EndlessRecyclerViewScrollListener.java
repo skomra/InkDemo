@@ -13,4 +13,8 @@ public abstract class EndlessRecyclerViewScrollListener extends RecyclerView.OnS
     public EndlessRecyclerViewScrollListener(LinearLayoutManager layoutManager) {
         this.mLayoutManager = layoutManager;
     }
+
+    public void onLoadMore(int page, int totalItemsCount) {
+        //loadMore();
+    }
 }

@@ -7,6 +7,7 @@ import java.nio.FloatBuffer;
 import com.wacom.ink.rasterization.BlendMode;
 import com.wacom.ink.utils.Utils;
 
+
 public class Stroke{
 	
 	private FloatBuffer points;

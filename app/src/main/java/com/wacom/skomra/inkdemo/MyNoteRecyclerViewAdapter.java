@@ -12,7 +12,7 @@ import android.view.ViewGroup;
 /**
  * Created by aas on 10/28/16.
  */
-public class MyNoteRecyclerViewAdapter {
+public class MyNoteRecyclerViewAdapter  extends RecyclerView.Adapter<MyNoteRecyclerViewAdapter.ViewHolder>{
     private static final String TAG = MyNoteRecyclerViewAdapter.class.getSimpleName();
     private final NotesListFragment.OnListFragmentInteractionListener mListener;
     private Cursor mCursor;
@@ -44,6 +44,13 @@ public class MyNoteRecyclerViewAdapter {
      */
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
+    }
+
+    @Override
+    public int getItemCount() {
+        if (mCursor == null)
+            return 0;
+        return mCursor.getCount();
     }
 
     @Override

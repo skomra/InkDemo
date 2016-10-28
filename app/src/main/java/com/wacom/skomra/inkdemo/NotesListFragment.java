@@ -18,6 +18,7 @@ import android.view.ViewGroup;
  */
 public class NotesListFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>{
 
+    private static final String TAG = NotesListFragment.class.getSimpleName();
     private OnListFragmentInteractionListener mListener;
     private int mColumnCount = 1;
 

@@ -65,7 +65,7 @@ public class NotesList extends AppCompatActivity implements NotesListFragment.On
     }
 
     private Uri getOnClickUri(int position){
-        Uri uri = Uri.parse("content://" + CONTENT_ITEM_TYPE + "/" +position);
+        Uri uri = Uri.parse("content://" + /*CONTENT_ITEM_TYPE +*/ "/" +position);
         return uri;
     }
 }

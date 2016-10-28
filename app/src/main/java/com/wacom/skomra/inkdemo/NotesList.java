@@ -1,5 +1,7 @@
 package com.wacom.skomra.inkdemo;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -9,7 +11,7 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 
-public class NotesList extends AppCompatActivity {
+public class NotesList extends AppCompatActivity implements NotesListFragment.OnListFragmentInteractionListener{
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,5 +50,22 @@ public class NotesList extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    /**
+     * cursor with one item
+     * @param id
+     */
+    @Override
+    public void onListFragmentInteraction(final int id) {
+        Intent intent = new Intent(this, CreateActivity.class);
+        Uri uri = getOnClickUri(id);
+        intent.setData(uri);
+        startActivityForResult(intent,0);
+    }
+
+    private Uri getOnClickUri(int position){
+        Uri uri = Uri.parse("content://" + CONTENT_ITEM_TYPE + "/" +position);
+        return uri;
     }
 }

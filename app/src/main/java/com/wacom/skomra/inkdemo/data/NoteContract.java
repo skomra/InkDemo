@@ -5,4 +5,7 @@ package com.wacom.skomra.inkdemo.data;
  */
 
 public class NoteContract {
+    public class NoteEntry {
+        public static final String NOTES_TABLE_NAME = "notes";
+    }
 }

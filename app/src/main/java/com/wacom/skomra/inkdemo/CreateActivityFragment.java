@@ -1,6 +1,8 @@
 package com.wacom.skomra.inkdemo;
 
 import android.graphics.Color;
+import android.net.Uri;
+import android.os.Environment;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.util.Log;
@@ -10,6 +12,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.wacom.ink.path.PathBuilder;
 import com.wacom.ink.path.PathUtils;
@@ -21,8 +24,13 @@ import com.wacom.ink.rasterization.SolidColorBrush;
 import com.wacom.ink.rasterization.StrokePaint;
 import com.wacom.ink.rasterization.StrokeRenderer;
 import com.wacom.ink.rendering.EGLRenderingContext;
+import com.wacom.ink.smooth.MultiChannelSmoothener;
+import com.wacom.skomra.inkdemo.model.Stroke;
+import com.wacom.skomra.inkdemo.model.StrokeSerializer;
 
+import java.io.File;
 import java.nio.FloatBuffer;
+import java.util.LinkedList;
 
 /**
  *
@@ -47,6 +55,8 @@ public class CreateActivityFragment extends Fragment {
     private StrokeRenderer strokeRenderer;
     private Layer strokesLayer;
     private Layer currentFrameLayer;
+    private LinkedList<Stroke> strokesList = new LinkedList<Stroke>();
+    private MultiChannelSmoothener smoothener;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -83,6 +93,9 @@ public class CreateActivityFragment extends Fragment {
                 paint.setColor(Color.BLUE);		// Blue color.
                 paint.setWidth(Float.NaN);		// Expected variable width.
 
+                smoothener = new MultiChannelSmoothener(pathStride);
+                smoothener.enableChannel(2);
+
                 strokeRenderer = new StrokeRenderer(inkCanvas, paint, pathStride, width, height);
 
                 renderView();
@@ -102,13 +115,39 @@ public class CreateActivityFragment extends Fragment {
         surfaceView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
+                boolean bFinished = buildPath(event);
                 buildPath(event);
                 drawStroke(event);
                 renderView();
+
+                if (bFinished){
+                    Stroke stroke = new Stroke();
+                    stroke.copyPoints(pathBuilder.getPathBuffer(), 0, pathBuilder.getPathSize());
+                    stroke.setStride(pathBuilder.getStride());
+                    stroke.setWidth(Float.NaN);
+                    stroke.setColor(paint.getColor());
+                    stroke.setInterval(0.0f, 1.0f);
+                    stroke.setBlendMode(BlendMode.BLENDMODE_NORMAL);
+
+                    strokesList.add(stroke);
+                }
+
                 return true;
             }
         });
 
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        StrokeSerializer strokeSerializer = new StrokeSerializer();
+        strokeSerializer.serialize(Uri.fromFile(getFile()), strokesList);
+        //TODO: insert file with filename into database
+    }
+
+    private File getFile(){
+        return new File(Environment.getExternalStorageDirectory() + "/will.bin");
     }
 
     private void renderView() {
@@ -118,26 +157,39 @@ public class CreateActivityFragment extends Fragment {
         inkCanvas.invalidate();
     }
 
-    private void buildPath(MotionEvent event){
+    private boolean buildPath(MotionEvent event){
         if (event.getAction()!=MotionEvent.ACTION_DOWN
                 && event.getAction()!=MotionEvent.ACTION_MOVE
                 && event.getAction()!=MotionEvent.ACTION_UP){
-            return;
+            return false;
+        }
+
+        if (event.getAction()==MotionEvent.ACTION_DOWN){
+            // Reset the smoothener instance when starting to generate a new path.
+            smoothener.reset();
         }
 
         PathUtils.Phase phase = PathUtils.getPhaseFromMotionEvent(event);
         // Add the current input point to the path builder
         FloatBuffer part = pathBuilder.addPoint(phase, event.getX(), event.getY(), event.getEventTime());
+        MultiChannelSmoothener.SmoothingResult smoothingResult;
         int partSize = pathBuilder.getPathPartSize();
-        Log.d("XXXX", "xx(1): path size=" + pathBuilder.getPathSize() + " | pos=" + pathBuilder.getPathLastUpdatePosition() + " | added_size=" + pathBuilder.getAddedPointsSize());
 
         if (partSize>0){
-            // Add the returned control points (aka path part) to the path builder.
-            pathBuilder.addPathPart(part, partSize);
+            // Smooth the returned control points (aka path part).
+            smoothingResult = smoothener.smooth(part, partSize, (phase== PathUtils.Phase.END));
+            // Add the smoothed control points to the path builder.
+            pathBuilder.addPathPart(smoothingResult.getSmoothedPoints(), smoothingResult.getSize());
         }
 
-        Log.d("XXXX", "xx(2): path size=" + pathBuilder.getPathSize() + " | pos=" + pathBuilder.getPathLastUpdatePosition() + " | added_size=" + pathBuilder.getAddedPointsSize());
+        // Create a preliminary path.
+        FloatBuffer preliminaryPath = pathBuilder.createPreliminaryPath();
+        // Smoothen the preliminary path's control points (return inform of a path part).
+        smoothingResult = smoothener.smooth(preliminaryPath, pathBuilder.getPreliminaryPathSize(), true);
+        // Add the smoothed preliminary path to the path builder.
+        pathBuilder.finishPreliminaryPath(smoothingResult.getSmoothedPoints(), smoothingResult.getSize());
 
+        return (event.getAction()==MotionEvent.ACTION_UP && pathBuilder.hasFinished());
     }
 
     private void drawStroke(MotionEvent event){

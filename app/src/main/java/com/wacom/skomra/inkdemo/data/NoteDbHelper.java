@@ -32,7 +32,11 @@ public class NoteDbHelper extends SQLiteOpenHelper {
                 + ")";
         Log.i(TAG, "db on create " + CREATE_NOTES_TABLE);
         db.execSQL(CREATE_NOTES_TABLE);
+    }
 
+    @Override
+    public void onOpen(SQLiteDatabase db) {
+        super.onOpen(db);
     }
 
     @Override

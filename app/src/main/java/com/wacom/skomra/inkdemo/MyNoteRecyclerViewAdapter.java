@@ -1,13 +1,25 @@
 package com.wacom.skomra.inkdemo;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.DataSetObserver;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Path;
+import android.media.ThumbnailUtils;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+import com.wacom.skomra.inkdemo.data.NoteContract;
+
+import java.io.File;
 
 /**
  * Created by aas on 10/28/16.
@@ -44,6 +56,87 @@ public class MyNoteRecyclerViewAdapter  extends RecyclerView.Adapter<MyNoteRecyc
      */
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
+        Cursor cursor = mCursor;
+        boolean b = cursor.moveToPosition(position);
+        final int id;
+
+        TextView mDocumentName = (TextView) holder.itemView.findViewById(R.id.document_name);
+        ImageView mThumbnail = (ImageView) holder.itemView.findViewById(R.id.listImage);
+
+        if (cursor != null) {
+            int index_id = cursor.getColumnIndex(NoteContract.NoteEntry.COLUMN_ID);
+            int index_doc_name = cursor.getColumnIndex(NoteContract.NoteEntry.COLUMN_NAME);
+            //int index_thumbnail = cursor.getColumnIndex(NoteContract.NoteEntry.COLUMN_THUMBNAIL);
+
+            String name = cursor.getString(index_doc_name);
+            id = cursor.getInt(index_id);
+
+            String pic_filename = cursor.getString(index_doc_name);
+            File image = new File(pic_filename);
+            //BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+            //Bitmap bitmap = BitmapFactory.decodeFile(image.getAbsolutePath(), bmOptions);
+
+            //Bitmap thumbImage = ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(imagePath), THUMBSIZE, THUMBSIZE);
+
+            Bitmap thumbImage = decodeSampledBitmapFromResource(image.getAbsolutePath(), 100, 100);
+            
+            mThumbnail.setImageBitmap(thumbImage);
+            mDocumentName.setText(name);
+
+            holder.mView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (null != mListener) {
+
+                        // Notify the active callbacks that an item has been selected.
+                        mListener.onListFragmentInteraction(id); //FIXME fix references to cursor here
+                    }
+                }
+            });
+
+        } else {
+            Log.i(TAG, "onbindviewholder " + b);
+        }
+    }
+
+    //Based on https://developer.android.com/training/displaying-bitmaps/load-bitmap.html
+    public static Bitmap decodeSampledBitmapFromResource(String path, int reqWidth, int reqHeight) {
+
+        // First decode with inJustDecodeBounds=true to check dimensions
+        final BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(path);
+
+        // Calculate inSampleSize
+        options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
+
+        // Decode bitmap with inSampleSize set
+        options.inJustDecodeBounds = false;
+        return BitmapFactory.decodeFile(path);
+    }
+
+    //Taken from https://developer.android.com/training/displaying-bitmaps/load-bitmap.html
+    public static int calculateInSampleSize(
+            BitmapFactory.Options options, int reqWidth, int reqHeight) {
+        // Raw height and width of image
+        final int height = options.outHeight;
+        final int width = options.outWidth;
+        int inSampleSize = 1;
+
+        if (height > reqHeight || width > reqWidth) {
+
+            final int halfHeight = height / 2;
+            final int halfWidth = width / 2;
+
+            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
+            // height and width larger than the requested height and width.
+            while ((halfHeight / inSampleSize) >= reqHeight
+                    && (halfWidth / inSampleSize) >= reqWidth) {
+                inSampleSize *= 2;
+            }
+        }
+
+        return inSampleSize;
     }
 
     @Override
@@ -51,6 +144,18 @@ public class MyNoteRecyclerViewAdapter  extends RecyclerView.Adapter<MyNoteRecyc
         if (mCursor == null)
             return 0;
         return mCursor.getCount();
+    }
+
+    public Cursor swapCursor(Cursor cursor){
+        if (mCursor == cursor)
+            return null;
+
+        Cursor oldCursor = mCursor;
+        this.mCursor = cursor;
+        if (cursor != null){
+            this.notifyDataSetChanged();
+        }
+        return oldCursor;
     }
 
     @Override
@@ -61,15 +166,19 @@ public class MyNoteRecyclerViewAdapter  extends RecyclerView.Adapter<MyNoteRecyc
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
+        public View mView;
+        public final View mThumbnail;
+        public final TextView mDocumentName;
 
         public ViewHolder(View view) {
             super(view);
+            mThumbnail = (ImageView) view.findViewById(R.id.listImage);
+            mDocumentName = (TextView) view.findViewById(R.id.document_name);
         }
 
         @Override
         public String toString() {
-            //return super.toString() + usernameView.getText() + " '" + ageView.getText() + "'";+
-            return super.toString();
+            return super.toString() + mDocumentName.getText();
         }
 
     }

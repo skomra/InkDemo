@@ -12,6 +12,7 @@ public class NoteContract {
     public static final String CONTENT_AUTHORITY = "com.wacom.skomra.inkdemo";
     public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY);
     public static final String PATH_NOTES = "notes";
+
     public static class NoteEntry implements BaseColumns {
 
         public static final Uri NOTES_URI =

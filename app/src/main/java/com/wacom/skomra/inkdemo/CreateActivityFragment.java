@@ -1,5 +1,7 @@
 package com.wacom.skomra.inkdemo;
 
+import android.content.ContentValues;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Environment;
@@ -24,6 +26,7 @@ import com.wacom.ink.rasterization.StrokePaint;
 import com.wacom.ink.rasterization.StrokeRenderer;
 import com.wacom.ink.rendering.EGLRenderingContext;
 import com.wacom.ink.smooth.MultiChannelSmoothener;
+import com.wacom.skomra.inkdemo.data.NoteContract;
 import com.wacom.skomra.inkdemo.model.Stroke;
 import com.wacom.skomra.inkdemo.model.StrokeSerializer;
 
@@ -38,6 +41,7 @@ import java.util.Random;
 public class CreateActivityFragment extends Fragment {
 
     private static final int MAX_LENGTH = 15;
+    private static final String TAG = "CreateActivityFragment";
 
     public CreateActivityFragment() {
     }
@@ -144,9 +148,17 @@ public class CreateActivityFragment extends Fragment {
     public void onDestroy() {
         super.onDestroy();
         StrokeSerializer strokeSerializer = new StrokeSerializer();
-        strokeSerializer.serialize(Uri.fromFile(getFile()), strokesList);
+        File file = getFile();
+        strokeSerializer.serialize(Uri.fromFile(file), strokesList);
         Log.i("Aaron", "on destroy");
         //TODO: insert file with filename into database
+
+        ContentValues noteValues = new ContentValues();
+
+        noteValues.put(NoteContract.NoteEntry.COLUMN_NAME, file.toString());
+        Log.i(TAG, "" + file.toString());
+
+        Uri uri = getActivity().getApplicationContext().getContentResolver().insert(NoteContract.NoteEntry.NOTES_URI, noteValues);
     }
 
     private File getFile(){

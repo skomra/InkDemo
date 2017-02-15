@@ -35,6 +35,11 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.wacom.skomra.inkdemo.NotesList" />
         </activity>
+
+        <provider
+            android:authorities="com.wacom.skomra.inkdemo"
+            android:name="com.wacom.skomra.inkdemo.data.NoteProvider" />
+
     </application>
 
 </manifest>

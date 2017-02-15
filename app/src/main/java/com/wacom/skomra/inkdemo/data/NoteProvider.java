@@ -195,12 +195,8 @@ public class NoteProvider extends ContentProvider {
         final UriMatcher matcher = new UriMatcher(UriMatcher.NO_MATCH);
         final String authority = NoteContract.CONTENT_AUTHORITY;
 
-        //matcher.addURI(authority, NoteContract.PATH_USERS, USERS);
-        //matcher.addURI(authority, NoteContract.PATH_USERS + "/#" , USER);
-        //FIXME matcher.addURI(authority,UserContract.PATH_USERS + "/*/#", USER);
-        matcher.addURI(authority, NoteContract.PATH_NOTES + "/#" , NOTE);
-        //matcher.addURI(authority, NoteContract.PATH_NOTES , NOTES);
-
+        matcher.addURI(authority, NoteContract.PATH_NOTES, NOTE);
+        //matcher.addURI(authority, NoteContract.PATH_NOTES + "/#" , NOTE);
         return matcher;
     }
 }

@@ -28,7 +28,7 @@ public class NoteDbHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         String CREATE_NOTES_TABLE = "CREATE TABLE IF NOT EXISTS " + NoteContract.NoteEntry.NOTES_TABLE_NAME + "("
                 +_ID + " INTEGER PRIMARY KEY, "
-                + _NAME + " TEXT,"
+                + _NAME + " TEXT "
                 + ")";
         Log.i(TAG, "db on create " + CREATE_NOTES_TABLE);
         db.execSQL(CREATE_NOTES_TABLE);

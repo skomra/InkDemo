@@ -12,7 +12,6 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import com.wacom.ink.path.PathBuilder;
 import com.wacom.ink.path.PathUtils;
@@ -31,11 +30,14 @@ import com.wacom.skomra.inkdemo.model.StrokeSerializer;
 import java.io.File;
 import java.nio.FloatBuffer;
 import java.util.LinkedList;
+import java.util.Random;
 
 /**
  *
  */
 public class CreateActivityFragment extends Fragment {
+
+    private static final int MAX_LENGTH = 15;
 
     public CreateActivityFragment() {
     }
@@ -143,11 +145,12 @@ public class CreateActivityFragment extends Fragment {
         super.onDestroy();
         StrokeSerializer strokeSerializer = new StrokeSerializer();
         strokeSerializer.serialize(Uri.fromFile(getFile()), strokesList);
+        Log.i("Aaron", "on destroy");
         //TODO: insert file with filename into database
     }
 
     private File getFile(){
-        return new File(Environment.getExternalStorageDirectory() + "/will.bin");
+        return new File(Environment.getExternalStorageDirectory() + "/" + random() +"will.bin");
     }
 
     private void renderView() {
@@ -155,6 +158,19 @@ public class CreateActivityFragment extends Fragment {
         // Copy the current frame layer in the view layer to present it on the screen.
         inkCanvas.drawLayer(currentFrameLayer, BlendMode.BLENDMODE_OVERWRITE);
         inkCanvas.invalidate();
+    }
+
+
+    private static final String ALLOWED_CHARACTERS ="0123456789qwertyuiopasdfghjklzxcvbnm";
+    public static String random() {
+        Random random = new Random();
+        StringBuilder sb = new StringBuilder();
+        int randomLength = random.nextInt(MAX_LENGTH);
+
+        for (int i = 0; i < randomLength; i++){
+            sb.append(ALLOWED_CHARACTERS.charAt(random.nextInt(ALLOWED_CHARACTERS.length())));
+        }
+        return sb.toString();
     }
 
     private boolean buildPath(MotionEvent event){
@@ -212,5 +228,4 @@ public class CreateActivityFragment extends Fragment {
         strokeRenderer.dispose();
         inkCanvas.dispose();
     }
-
 }

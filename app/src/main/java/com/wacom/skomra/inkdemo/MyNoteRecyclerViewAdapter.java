@@ -60,7 +60,7 @@ public class MyNoteRecyclerViewAdapter  extends RecyclerView.Adapter<MyNoteRecyc
         boolean b = cursor.moveToPosition(position);
         final int id;
 
-        TextView mDocumentName = (TextView) holder.itemView.findViewById(R.id.document_name);
+        TextView mDocumentName = (TextView) holder.mDocumentName;
         ImageView mThumbnail = (ImageView) holder.itemView.findViewById(R.id.listImage);
 
         if (cursor != null) {
@@ -78,9 +78,9 @@ public class MyNoteRecyclerViewAdapter  extends RecyclerView.Adapter<MyNoteRecyc
 
             //Bitmap thumbImage = ThumbnailUtils.extractThumbnail(BitmapFactory.decodeFile(imagePath), THUMBSIZE, THUMBSIZE);
 
-            Bitmap thumbImage = decodeSampledBitmapFromResource(image.getAbsolutePath(), 100, 100);
+//            Bitmap thumbImage = decodeSampledBitmapFromResource(image.getAbsolutePath(), 100, 100);
             
-            mThumbnail.setImageBitmap(thumbImage);
+//            mThumbnail.setImageBitmap(thumbImage);
             mDocumentName.setText(name);
 
             holder.mView.setOnClickListener(new View.OnClickListener() {
@@ -161,7 +161,7 @@ public class MyNoteRecyclerViewAdapter  extends RecyclerView.Adapter<MyNoteRecyc
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.fragment_create, parent, false);
+                .inflate(R.layout.fragment_note_thumbnail, parent, false);
         return new ViewHolder(view);
     }
 
@@ -172,6 +172,7 @@ public class MyNoteRecyclerViewAdapter  extends RecyclerView.Adapter<MyNoteRecyc
 
         public ViewHolder(View view) {
             super(view);
+            mView = view;
             mThumbnail = (ImageView) view.findViewById(R.id.listImage);
             mDocumentName = (TextView) view.findViewById(R.id.document_name);
         }

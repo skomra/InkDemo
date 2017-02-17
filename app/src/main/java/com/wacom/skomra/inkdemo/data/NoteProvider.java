@@ -41,7 +41,7 @@ public class NoteProvider extends ContentProvider {
         switch (sUriMatcher.match(uri)) {
             case NOTE:
             {
-                selection = NoteContract.NoteEntry.COLUMN_ID + " = " +uri.getLastPathSegment();
+                //selection = NoteContract.NoteEntry.COLUMN_ID + " = " +uri.getLastPathSegment();
                 retCursor = mOpenHelper.getReadableDatabase().query(
                         NoteContract.NoteEntry.NOTES_TABLE_NAME,
                         projection,

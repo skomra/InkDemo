@@ -1,10 +1,13 @@
 package com.wacom.skomra.inkdemo;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.net.Uri;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -13,12 +16,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.wacom.skomra.inkdemo.data.NoteContract;
+
 /**
  * A placeholder fragment containing a simple view.
  */
 public class NotesListFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>{
 
     private static final String TAG = NotesListFragment.class.getSimpleName();
+    private static final int VALUE_NOT_USED = -1;
     private OnListFragmentInteractionListener mListener;
     private int mColumnCount = 1;
 
@@ -37,6 +43,15 @@ public class NotesListFragment extends Fragment implements LoaderManager.LoaderC
             mAdapter = new MyNoteRecyclerViewAdapter(getContext(), null, mListener, this);
 
         //loadMore();//onLoadInitialData();
+    }
+
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        //TODO check if loader is already running?
+        getLoaderManager().initLoader(VALUE_NOT_USED, null, this);
+
+        super.onActivityCreated(savedInstanceState);
     }
 
     @Override
@@ -84,17 +99,46 @@ public class NotesListFragment extends Fragment implements LoaderManager.LoaderC
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        return null;
+        CursorLoader loader = null;
+
+        Log.i(TAG, "on create loader");
+        //SharedPreferences preferences = getActivity().getSharedPreferences(PREFS_NAME,0);
+        //Log.i(TAG, "preferences.contains(\"sort_by_name\")" + preferences.contains("sort_by_name"));
+        //boolean sortByName = preferences.getBoolean("sort_by_name", true);
+        //Log.i(TAG, "create loader got boolean sortByName " + sortByName);
+
+        //actually getting my cursor in onBindViewHolder?
+        //if i comment this out no data
+
+        if (true /*sortByName*/) {
+            String sortOrder = NoteContract.NoteEntry.COLUMN_NAME + " ASC";
+            Uri usersUri = NoteContract.NoteEntry.getNotesUri();
+            loader = new CursorLoader(
+                    this.getActivity(),
+                    usersUri,
+                    null,
+                    null,
+                    null,
+                    sortOrder);
+        }
+
+        mAdapter.notifyDataSetChanged();
+        return loader;
     }
+
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-
+        mAdapter.swapCursor(data);
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
+        mAdapter.swapCursor(null);
+    }
 
+    public void notifyDataChange(){
+        mAdapter.notifyDataSetChanged();
     }
 
     public interface OnListFragmentInteractionListener {

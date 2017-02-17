@@ -29,6 +29,10 @@ public class NoteContract {
         public static Uri buildNoteUri(long id) {
             return ContentUris.withAppendedId(NOTES_URI, id);
         }
+
+        public static Uri getNotesUri() {
+            return NOTES_URI;
+        }
     }
 
 }

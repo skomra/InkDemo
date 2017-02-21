@@ -59,15 +59,6 @@ public class CreateActivityFragment extends Fragment {
     private static final String TAG = "CreateActivityFragment";
     Uri mUri;
 
-    public CreateActivityFragment() {
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_create, container, false);
-    }
-
     private InkCanvas inkCanvas;
     private Layer viewLayer;
     private SpeedPathBuilder pathBuilder;
@@ -79,6 +70,21 @@ public class CreateActivityFragment extends Fragment {
     private Layer currentFrameLayer;
     private LinkedList<Stroke> strokesList = new LinkedList<Stroke>();
     private MultiChannelSmoothener smoothener;
+
+    private int sceneWidth;
+    private int sceneHeight;
+
+
+    public CreateActivityFragment() {
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_create, container, false);
+    }
+
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -125,6 +131,9 @@ public class CreateActivityFragment extends Fragment {
                 smoothener.enableChannel(2);
 
                 strokeRenderer = new StrokeRenderer(inkCanvas, paint, pathStride, width, height);
+
+                sceneWidth = width;
+                sceneHeight = height;
 
                 renderView();
             }
@@ -265,5 +274,89 @@ public class CreateActivityFragment extends Fragment {
 
     public void setUri(Uri uri) {
         mUri = uri;
+    }
+
+    private void loadWillFile(){
+        File willFile = new File(Environment.getExternalStorageDirectory() + "/sample.will");
+        try {
+            WillDocumentFactory wdf = new WillDocumentFactory(getActivity(), getActivity().getCacheDir());
+            WILLReader reader = new WILLReader(wdf, willFile);
+            WillDocument doc = reader.read();
+            for (Section section: doc.getSections()){
+                ArrayList<BaseNode> pathsElements = section.findChildren(BaseNode.TYPE_PATHS);
+                for (BaseNode node: pathsElements){
+                    Paths pathsElement = (Paths)node;
+                    for (InkPathData inkPath: pathsElement.getInkPaths()){
+                        Stroke stroke = new Stroke();
+                        stroke.copyPoints(inkPath.getPoints(), 0, inkPath.getSize());
+                        stroke.setStride(inkPath.getStride());
+                        stroke.setWidth(inkPath.getWidth());
+                        stroke.setBlendMode(inkPath.getBlendMode());
+                        stroke.setInterval(inkPath.getTs(), inkPath.getTf());
+                        stroke.setColor(inkPath.getColor());
+                        stroke.setPaintIndex(inkPath.getPaintIndex());
+                        stroke.setSeed(inkPath.getRandomSeed());
+                        stroke.setHasRandomSeed(inkPath.hasRandomSeed());
+                        strokesList.add(stroke);
+                    }
+                }
+            }
+            doc.recycle();
+        } catch (WILLFormatException e) {
+            throw new WILLException("Can't read the sample.will file. Reason: " + e.getLocalizedMessage() + " / Check stacktrace in the console.");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void saveWillFile(){
+        File willFile = new File(Environment.getExternalStorageDirectory() + "/sample.will");
+
+        LinkedList<InkPathData> inkPathsDataList = new LinkedList<InkPathData>();
+        for (Stroke stroke: strokesList){
+            InkPathData inkPathData = new InkPathData(
+                    stroke.getPoints(),
+                    stroke.getSize(),
+                    stroke.getStride(),
+                    stroke.getWidth(),
+                    stroke.getColor(),
+                    stroke.getStartValue(),
+                    stroke.getEndValue(),
+                    stroke.getBlendMode(),
+                    stroke.getPaintIndex(),
+                    stroke.getSeed(),
+                    stroke.hasRandomSeed());
+            inkPathsDataList.add(inkPathData);
+        }
+
+        WillDocumentFactory factory = new WillDocumentFactory(getActivity(), getActivity().getCacheDir());
+
+        try{
+            WillDocument willDoc = factory.newDocument();
+
+            willDoc.setCoreProperties(new CorePropertiesBuilder()
+                    .category("category")
+                    .created(new Date())
+                    .build());
+
+            willDoc.setExtendedProperties(new ExtendedPropertiesBuilder()
+                    .template("light")
+                    .application("demo")
+                    .appVersion("0.0.1")
+                    .build());
+
+            Section section = willDoc.createSection()
+                    .width(sceneWidth)
+                    .height(sceneHeight)
+                    .addChild(
+                            willDoc.createPaths(inkPathsDataList, 2));
+
+            willDoc.addSection(section);
+
+            new WILLWriter(willFile).write(willDoc);
+            willDoc.recycle();
+        } catch (WILLFormatException e){
+            throw new WILLException("Can't write the sample.will file. Reason: " + e.getLocalizedMessage() + " / Check stacktrace in the console.");
+        }
     }
 }

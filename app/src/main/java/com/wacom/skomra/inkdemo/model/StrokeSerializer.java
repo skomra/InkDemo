@@ -71,4 +71,5 @@ public class StrokeSerializer {
 		}
 		return result;
 	}
+
 }

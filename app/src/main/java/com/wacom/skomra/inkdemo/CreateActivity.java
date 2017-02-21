@@ -3,6 +3,7 @@ package com.wacom.skomra.inkdemo;
 import android.Manifest;
 import android.app.Activity;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -12,6 +13,7 @@ import android.util.Log;
 public class CreateActivity extends AppCompatActivity {
 
     private static final String TAG = "CreateActivity";
+    public Uri mUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,6 +24,10 @@ public class CreateActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         verifyStoragePermissions(this);
+
+        mUri = getIntent().getData();
+        if (mUri != null)
+            Log.i(TAG, "uri in create activity " + mUri.toString());
         /*FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -31,6 +37,12 @@ public class CreateActivity extends AppCompatActivity {
             }
         });
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);*/
+
+        CreateActivityFragment fragment = (CreateActivityFragment)
+                getSupportFragmentManager().findFragmentById(R.id.create_fragment);
+        if (mUri != null)
+            fragment.setUri(mUri);
+
     }
 
     private static final int REQUEST_EXTERNAL_STORAGE = 1;

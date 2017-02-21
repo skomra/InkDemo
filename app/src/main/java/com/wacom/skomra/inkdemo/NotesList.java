@@ -12,6 +12,8 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import static com.wacom.skomra.inkdemo.data.NoteContract.NoteEntry.CONTENT_ITEM_TYPE;
+
 public class NotesList extends AppCompatActivity implements NotesListFragment.OnListFragmentInteractionListener{
 
     private static final String TAG = NotesList.class.getSimpleName();
@@ -74,11 +76,11 @@ public class NotesList extends AppCompatActivity implements NotesListFragment.On
         Intent intent = new Intent(this, CreateActivity.class);
         Uri uri = getOnClickUri(id);
         intent.setData(uri);
-        startActivityForResult(intent,0);
+        startActivityForResult(intent, 0);
     }
 
     private Uri getOnClickUri(int position){
-        Uri uri = Uri.parse("content://" + /*CONTENT_ITEM_TYPE +*/ "/" +position);
+        Uri uri = Uri.parse("content://" + CONTENT_ITEM_TYPE + "/" + position);
         return uri;
     }
 }

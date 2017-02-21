@@ -15,6 +15,7 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.wacom.ink.WILLException;
 import com.wacom.ink.path.PathBuilder;
 import com.wacom.ink.path.PathUtils;
 import com.wacom.ink.path.SpeedPathBuilder;
@@ -25,13 +26,27 @@ import com.wacom.ink.rasterization.SolidColorBrush;
 import com.wacom.ink.rasterization.StrokePaint;
 import com.wacom.ink.rasterization.StrokeRenderer;
 import com.wacom.ink.rendering.EGLRenderingContext;
+import com.wacom.ink.serialization.InkPathData;
 import com.wacom.ink.smooth.MultiChannelSmoothener;
+import com.wacom.ink.willformat.BaseNode;
+import com.wacom.ink.willformat.CorePropertiesBuilder;
+import com.wacom.ink.willformat.ExtendedPropertiesBuilder;
+import com.wacom.ink.willformat.Paths;
+import com.wacom.ink.willformat.Section;
+import com.wacom.ink.willformat.WILLFormatException;
+import com.wacom.ink.willformat.WILLReader;
+import com.wacom.ink.willformat.WILLWriter;
+import com.wacom.ink.willformat.WillDocument;
+import com.wacom.ink.willformat.WillDocumentFactory;
 import com.wacom.skomra.inkdemo.data.NoteContract;
 import com.wacom.skomra.inkdemo.model.Stroke;
 import com.wacom.skomra.inkdemo.model.StrokeSerializer;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.nio.FloatBuffer;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.Random;
 
@@ -42,6 +57,7 @@ public class CreateActivityFragment extends Fragment {
 
     private static final int MAX_LENGTH = 15;
     private static final String TAG = "CreateActivityFragment";
+    Uri mUri;
 
     public CreateActivityFragment() {
     }
@@ -75,8 +91,14 @@ public class CreateActivityFragment extends Fragment {
         pathBuilder.setPropertyConfig(PathBuilder.PropertyName.Width, 5f, 10f, 5f, 10f, PathBuilder.PropertyFunction.Power, 1.0f, false);
         pathStride = pathBuilder.getStride();
 
+        if (mUri != null) {
+            StrokeSerializer strokeSerializer = new StrokeSerializer();
+            strokeSerializer.deserialize(mUri);
+        }
+
         SurfaceView surfaceView = (SurfaceView) getActivity().findViewById(R.id.surfaceview);
         surfaceView.getHolder().addCallback(new SurfaceHolder.Callback(){
+
 
             @Override
             public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
@@ -239,5 +261,9 @@ public class CreateActivityFragment extends Fragment {
     private void releaseResources(){
         strokeRenderer.dispose();
         inkCanvas.dispose();
+    }
+
+    public void setUri(Uri uri) {
+        mUri = uri;
     }
 }

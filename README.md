@@ -17,7 +17,7 @@ Will App Functionality
 
  Manipulate Strokes - erase whole strokes using WILL's intersector - done
 
- Smoothen strokes - not done
+ Smoothen strokes - done
 
 
 ##File

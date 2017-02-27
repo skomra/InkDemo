@@ -322,6 +322,7 @@ public class CreateActivityFragment extends Fragment {
                         stroke.setPaintIndex(inkPath.getPaintIndex());
                         stroke.setSeed(inkPath.getRandomSeed());
                         stroke.setHasRandomSeed(inkPath.hasRandomSeed());
+                        stroke.calculateBounds();
                         strokesList.add(stroke);
                     }
                 }

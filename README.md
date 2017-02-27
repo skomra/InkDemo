@@ -5,30 +5,30 @@ TODO:
 Will App Functionality
 
 ##High level
- Display a list of notes
+ Display a list of notes - done
 
- Open, view, add to a note
+ Open, view, add to a note - done
 
- Notes composed of Will Strokes
+ Notes composed of strokes -done
 
 
 ##Note
- Create strokes
+ Create strokes - done with bug
 
- Manipulate Strokes - erase whole strokes using WILL's intersector
+ Manipulate Strokes - erase whole strokes using WILL's intersector - not done
 
- Smoothen strokes
+ Smoothen strokes - not done
 
 
 ##File
- Notes saved on disk as WILL files
+ Notes saved on disk as WILL files - done
 
- Notes loaded from disk when opened
+ Notes loaded from disk when opened - done
 
- Import a WILL File from filesystem
+ Import a WILL File from filesystem - not done
 
- Delete WILL files
+ Delete WILL files - maybe not necessary
 
 
 ##Serialize
- save document (strokes) in progress
+ save document (strokes) in progress - This is redundant with saving to WILL files

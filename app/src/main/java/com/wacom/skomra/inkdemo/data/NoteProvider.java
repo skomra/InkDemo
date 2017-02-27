@@ -18,8 +18,8 @@ public class NoteProvider extends ContentProvider {
 
     private static String TAG = NoteProvider.class.getSimpleName();
     private static final UriMatcher sUriMatcher = buildUriMatcher();
-    private static final int NOTE = 102;
-    private static final int NOTES = 101;
+    private static final int NOTES = 102;
+    private static final int NOTE = 101;
 
     NoteDbHelper mOpenHelper;
     @Override
@@ -39,7 +39,7 @@ public class NoteProvider extends ContentProvider {
     public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
         Cursor retCursor;
         switch (sUriMatcher.match(uri)) {
-            case NOTE:
+            case NOTES:
             {
                 //selection = NoteContract.NoteEntry.COLUMN_ID + " = " +uri.getLastPathSegment();
                 retCursor = mOpenHelper.getReadableDatabase().query(
@@ -53,6 +53,21 @@ public class NoteProvider extends ContentProvider {
                 );
                 break;
             }
+            case NOTE:
+            {
+                selection = NoteContract.NoteEntry.COLUMN_ID + " = " +uri.getLastPathSegment();
+                retCursor = mOpenHelper.getReadableDatabase().query(
+                        NoteContract.NoteEntry.NOTES_TABLE_NAME,
+                        projection,
+                        selection,
+                        selectionArgs,
+                        null,
+                        null,
+                        sortOrder
+                );
+                break;
+            }
+
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
@@ -68,7 +83,6 @@ public class NoteProvider extends ContentProvider {
         Uri returnUri = null;
         switch (match) {
 
-            case NOTE:
             case NOTES:
                 long row = db.insertWithOnConflict(
                         NoteContract.NoteEntry.NOTES_TABLE_NAME,
@@ -93,10 +107,10 @@ public class NoteProvider extends ContentProvider {
     public String getType(Uri uri) {
         final int match = sUriMatcher.match(uri);
         switch (match) {
-            case NOTE:
-                return NoteContract.NoteEntry.CONTENT_ITEM_TYPE;
             case NOTES:
-                return NoteContract.NoteEntry.CONTENT_TYPE;
+                return NoteContract.NoteEntry.CONTENT_ITEM_TYPE;
+            //case NOTES:
+            //    return NoteContract.NoteEntry.CONTENT_TYPE;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " +uri);
         }
@@ -111,7 +125,7 @@ public class NoteProvider extends ContentProvider {
         if (selection == null)
             selection = "1'";
         switch(match){
-            case NOTE:
+            case NOTES:
                 rowsDeleted = db.delete(
                         NoteContract.NoteEntry.NOTES_TABLE_NAME,
                         selection,
@@ -136,7 +150,7 @@ public class NoteProvider extends ContentProvider {
         if (selection == null)
             selection = "1'";
         switch(match){
-            case NOTE:
+            case NOTES:
                 rowsUpdated = db.update(
                         NoteContract.NoteEntry.NOTES_TABLE_NAME,
                         values,
@@ -195,8 +209,8 @@ public class NoteProvider extends ContentProvider {
         final UriMatcher matcher = new UriMatcher(UriMatcher.NO_MATCH);
         final String authority = NoteContract.CONTENT_AUTHORITY;
 
-        matcher.addURI(authority, NoteContract.PATH_NOTES, NOTE);
-        //matcher.addURI(authority, NoteContract.PATH_NOTES + "/#" , NOTE);
+        matcher.addURI(authority, NoteContract.PATH_NOTES, NOTES);
+        matcher.addURI(authority, NoteContract.PATH_NOTES + "/#" , NOTE);
         return matcher;
     }
 }

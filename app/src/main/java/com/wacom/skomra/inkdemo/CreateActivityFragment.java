@@ -2,6 +2,7 @@ package com.wacom.skomra.inkdemo;
 
 import android.content.ContentValues;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Environment;
@@ -40,7 +41,6 @@ import com.wacom.ink.willformat.WillDocument;
 import com.wacom.ink.willformat.WillDocumentFactory;
 import com.wacom.skomra.inkdemo.data.NoteContract;
 import com.wacom.skomra.inkdemo.model.Stroke;
-import com.wacom.skomra.inkdemo.model.StrokeSerializer;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -89,6 +89,8 @@ public class CreateActivityFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        strokesList = new LinkedList<Stroke>();
+
         getActivity().setContentView(R.layout.activity_draw_with_touch);
 
         pathBuilder = new SpeedPathBuilder();
@@ -96,11 +98,6 @@ public class CreateActivityFragment extends Fragment {
         pathBuilder.setMovementThreshold(2.0f);
         pathBuilder.setPropertyConfig(PathBuilder.PropertyName.Width, 5f, 10f, 5f, 10f, PathBuilder.PropertyFunction.Power, 1.0f, false);
         pathStride = pathBuilder.getStride();
-
-        if (mUri != null) {
-            StrokeSerializer strokeSerializer = new StrokeSerializer();
-            strokeSerializer.deserialize(mUri);
-        }
 
         SurfaceView surfaceView = (SurfaceView) getActivity().findViewById(R.id.surfaceview);
         surfaceView.getHolder().addCallback(new SurfaceHolder.Callback(){
@@ -135,6 +132,10 @@ public class CreateActivityFragment extends Fragment {
                 sceneWidth = width;
                 sceneHeight = height;
 
+                if (mUri != null)
+                    loadWillFile();
+
+                drawStrokes();
                 renderView();
             }
 
@@ -177,23 +178,8 @@ public class CreateActivityFragment extends Fragment {
 
     @Override
     public void onDestroy() {
+        saveWillFile();
         super.onDestroy();
-        StrokeSerializer strokeSerializer = new StrokeSerializer();
-        File file = getFile();
-        strokeSerializer.serialize(Uri.fromFile(file), strokesList);
-        Log.i("Aaron", "on destroy");
-        //TODO: insert file with filename into database
-
-        ContentValues noteValues = new ContentValues();
-
-        noteValues.put(NoteContract.NoteEntry.COLUMN_NAME, file.toString());
-        Log.i(TAG, "" + file.toString());
-
-        Uri uri = getActivity().getApplicationContext().getContentResolver().insert(NoteContract.NoteEntry.NOTES_URI, noteValues);
-    }
-
-    private File getFile(){
-        return new File(Environment.getExternalStorageDirectory() + "/" + random() +"will.bin");
     }
 
     private void renderView() {
@@ -202,7 +188,6 @@ public class CreateActivityFragment extends Fragment {
         inkCanvas.drawLayer(currentFrameLayer, BlendMode.BLENDMODE_OVERWRITE);
         inkCanvas.invalidate();
     }
-
 
     private static final String ALLOWED_CHARACTERS ="0123456789qwertyuiopasdfghjklzxcvbnm";
     public static String random() {
@@ -267,17 +252,57 @@ public class CreateActivityFragment extends Fragment {
         }
     }
 
+    private void drawStrokes() {
+        inkCanvas.setTarget(strokesLayer);
+        inkCanvas.clearColor();
+
+        for (Stroke stroke: strokesList){
+            paint.setColor(stroke.getColor());
+            strokeRenderer.setStrokePaint(paint);
+            strokeRenderer.drawPoints(stroke.getPoints(), 0, stroke.getSize(), stroke.getStartValue(), stroke.getEndValue(), true);
+            strokeRenderer.blendStroke(strokesLayer, stroke.getBlendMode());
+        }
+
+        inkCanvas.setTarget(currentFrameLayer);
+        inkCanvas.clearColor(Color.WHITE);
+        inkCanvas.drawLayer(strokesLayer, BlendMode.BLENDMODE_NORMAL);
+    }
+
     private void releaseResources(){
         strokeRenderer.dispose();
         inkCanvas.dispose();
     }
 
     public void setUri(Uri uri) {
+        Log.i(TAG, "setUri: " + uri.toString());
         mUri = uri;
     }
 
+    private File getFilePathFromUri(){
+
+        if (mUri != null) {
+            Cursor query = getActivity().getApplicationContext().getContentResolver().query(mUri, null, null, null, null);
+            DatabaseUtils.dumpCursor(query);
+            int index_of_name = query.getColumnIndex(NoteContract.NoteEntry.COLUMN_NAME);
+            query.moveToFirst();
+            String name = query.getString(index_of_name);
+            return new File(name);
+        } else {
+            File file = new File(Environment.getExternalStorageDirectory() + "/" + random() +".will");
+
+            // Insert filename into database
+            ContentValues noteValues = new ContentValues();
+            noteValues.put(NoteContract.NoteEntry.COLUMN_NAME, file.toString());
+            Log.i(TAG, "" + file.toString());
+            mUri = getActivity().getApplicationContext().getContentResolver().insert(NoteContract.NoteEntry.NOTES_URI, noteValues);
+            saveWillFile();
+            return file;
+        }
+    }
+
     private void loadWillFile(){
-        File willFile = new File(Environment.getExternalStorageDirectory() + "/sample.will");
+        File willFile = getFilePathFromUri();
+
         try {
             WillDocumentFactory wdf = new WillDocumentFactory(getActivity(), getActivity().getCacheDir());
             WILLReader reader = new WILLReader(wdf, willFile);
@@ -310,7 +335,7 @@ public class CreateActivityFragment extends Fragment {
     }
 
     private void saveWillFile(){
-        File willFile = new File(Environment.getExternalStorageDirectory() + "/sample.will");
+        File willFile = getFilePathFromUri();
 
         LinkedList<InkPathData> inkPathsDataList = new LinkedList<InkPathData>();
         for (Stroke stroke: strokesList){
@@ -358,5 +383,10 @@ public class CreateActivityFragment extends Fragment {
         } catch (WILLFormatException e){
             throw new WILLException("Can't write the sample.will file. Reason: " + e.getLocalizedMessage() + " / Check stacktrace in the console.");
         }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
     }
 }

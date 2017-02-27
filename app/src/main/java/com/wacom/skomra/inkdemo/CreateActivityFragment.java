@@ -17,6 +17,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.wacom.ink.WILLException;
+import com.wacom.ink.manipulation.Intersector;
 import com.wacom.ink.path.PathBuilder;
 import com.wacom.ink.path.PathUtils;
 import com.wacom.ink.path.SpeedPathBuilder;
@@ -74,8 +75,14 @@ public class CreateActivityFragment extends Fragment {
     private int sceneWidth;
     private int sceneHeight;
 
+    private Intersector<Stroke> intersector;
+    SurfaceView mSurfaceView;
+
+    View.OnTouchListener mInkListener;
+    View.OnTouchListener mEraseListener;
 
     public CreateActivityFragment() {
+        intersector = new Intersector<Stroke>();
     }
 
     @Override
@@ -83,8 +90,6 @@ public class CreateActivityFragment extends Fragment {
                              Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_create, container, false);
     }
-
-
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -99,10 +104,16 @@ public class CreateActivityFragment extends Fragment {
         pathBuilder.setPropertyConfig(PathBuilder.PropertyName.Width, 5f, 10f, 5f, 10f, PathBuilder.PropertyFunction.Power, 1.0f, false);
         pathStride = pathBuilder.getStride();
 
-        SurfaceView surfaceView = (SurfaceView) getActivity().findViewById(R.id.surfaceview);
-        surfaceView.getHolder().addCallback(new SurfaceHolder.Callback(){
+        mSurfaceView = (SurfaceView) getActivity().findViewById(R.id.surfaceview);
+        mSurfaceView.getHolder().addCallback(new SurfaceHolder.Callback(){
 
-
+            /**
+             * surface changed is called on init and on reorientation, not on with every stroke
+             * @param holder
+             * @param format
+             * @param width
+             * @param height
+             */
             @Override
             public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
                 if (inkCanvas!=null && !inkCanvas.isDisposed()){
@@ -141,7 +152,6 @@ public class CreateActivityFragment extends Fragment {
 
             @Override
             public void surfaceCreated(SurfaceHolder holder) {
-
             }
 
             @Override
@@ -150,7 +160,7 @@ public class CreateActivityFragment extends Fragment {
             }
         });
 
-        surfaceView.setOnTouchListener(new View.OnTouchListener() {
+        mInkListener = new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 boolean bFinished = buildPath(event);
@@ -166,13 +176,43 @@ public class CreateActivityFragment extends Fragment {
                     stroke.setColor(paint.getColor());
                     stroke.setInterval(0.0f, 1.0f);
                     stroke.setBlendMode(BlendMode.BLENDMODE_NORMAL);
-
+                    stroke.calculateBounds();
                     strokesList.add(stroke);
                 }
 
                 return true;
             }
-        });
+        };
+
+        mEraseListener = new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                buildPath(event);
+                if (strokesList.size() > 0) {
+                    intersector.setTargetAsStroke(pathBuilder.getPathBuffer(),
+                            pathBuilder.getPathLastUpdatePosition(),
+                            pathBuilder.getAddedPointsSize(),
+                            pathStride);
+
+                    LinkedList<Stroke> removedStrokes = new LinkedList<Stroke>();
+                    for (Stroke stroke: strokesList){
+                        if (stroke.getBounds() == null)
+                            Log.e(TAG, "stroke has no bounds, attempting to intersect will give the" +
+                                    "following error:\n" + "JNI DETECTED ERROR IN APPLICATION: field " +
+                                    "operation on NULL object: 0x0\n in call to GetLongField");
+                        if (intersector.isIntersectingTarget(stroke)){
+                            removedStrokes.add(stroke);
+                        }
+                    }
+                    strokesList.removeAll(removedStrokes);
+                    drawStrokes();
+                    renderView();
+                }
+                return true;
+            }
+        };
+
+        mSurfaceView.setOnTouchListener(mInkListener);
 
     }
 
@@ -241,13 +281,13 @@ public class CreateActivityFragment extends Fragment {
 
         if (event.getAction()!=MotionEvent.ACTION_UP){
             inkCanvas.setTarget(currentFrameLayer, strokeRenderer.getStrokeUpdatedArea());
-            //inkCanvas.clearColor(Color.GREEN);
+            inkCanvas.clearColor(Color.WHITE);
             inkCanvas.drawLayer(strokesLayer, BlendMode.BLENDMODE_NORMAL);
             strokeRenderer.blendStrokeUpdatedArea(currentFrameLayer, BlendMode.BLENDMODE_NORMAL);
         } else {
             strokeRenderer.blendStroke(strokesLayer, BlendMode.BLENDMODE_NORMAL);
             inkCanvas.setTarget(currentFrameLayer);
-            //inkCanvas.clearColor(Color.RED);
+            inkCanvas.clearColor(Color.WHITE);
             inkCanvas.drawLayer(strokesLayer, BlendMode.BLENDMODE_NORMAL);
         }
     }
@@ -389,5 +429,28 @@ public class CreateActivityFragment extends Fragment {
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
+    }
+
+    protected void switchToEraser(){
+
+        pathBuilder = new SpeedPathBuilder();
+        pathBuilder.setNormalizationConfig(100.0f, 4000.0f);
+        pathBuilder.setMovementThreshold(2.0f);
+        pathBuilder.setPropertyConfig(PathBuilder.PropertyName.Width, 30f, 40f, Float.NaN, Float.NaN,
+                PathBuilder.PropertyFunction.Power, 1.0f, false);
+        pathStride = pathBuilder.getStride();
+
+        mSurfaceView.setOnTouchListener(mEraseListener);
+    }
+
+    protected void switchToInk(){
+        pathBuilder = new SpeedPathBuilder();
+        pathBuilder.setNormalizationConfig(100.0f, 4000.0f);
+        pathBuilder.setMovementThreshold(2.0f);
+        pathBuilder.setPropertyConfig(PathBuilder.PropertyName.Width, 5f, 10f, 5f, 10f,
+                PathBuilder.PropertyFunction.Power, 1.0f, false);
+        pathStride = pathBuilder.getStride();
+
+        mSurfaceView.setOnTouchListener(mInkListener);
     }
 }

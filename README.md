@@ -15,7 +15,7 @@ Will App Functionality
 ##Note
  Create strokes - done with bug
 
- Manipulate Strokes - erase whole strokes using WILL's intersector - not done
+ Manipulate Strokes - erase whole strokes using WILL's intersector - done
 
  Smoothen strokes - not done
 

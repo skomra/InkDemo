@@ -164,7 +164,6 @@ public class CreateActivityFragment extends Fragment {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 boolean bFinished = buildPath(event);
-                buildPath(event);
                 drawStroke(event);
                 renderView();
 
@@ -276,10 +275,17 @@ public class CreateActivityFragment extends Fragment {
         return (event.getAction()==MotionEvent.ACTION_UP && pathBuilder.hasFinished());
     }
 
+    /**
+     * called in onTouchListener to draw one new stroke
+     * @param event
+     */
     private void drawStroke(MotionEvent event){
-        strokeRenderer.drawPoints(pathBuilder.getPathBuffer(), pathBuilder.getPathLastUpdatePosition(), pathBuilder.getAddedPointsSize(), event.getAction()==MotionEvent.ACTION_UP);
+        strokeRenderer.drawPoints(pathBuilder.getPathBuffer(),
+                pathBuilder.getPathLastUpdatePosition(),
+                pathBuilder.getAddedPointsSize(),
+                event.getAction()==MotionEvent.ACTION_UP);
 
-        if (event.getAction()!=MotionEvent.ACTION_UP){
+        if (event.getAction() != MotionEvent.ACTION_UP){
             inkCanvas.setTarget(currentFrameLayer, strokeRenderer.getStrokeUpdatedArea());
             inkCanvas.clearColor(Color.WHITE);
             inkCanvas.drawLayer(strokesLayer, BlendMode.BLENDMODE_NORMAL);
@@ -292,6 +298,9 @@ public class CreateActivityFragment extends Fragment {
         }
     }
 
+    /**
+     * called in surfaceChanged() and after erasing strokes to redraw the remaining strokes
+     */
     private void drawStrokes() {
         inkCanvas.setTarget(strokesLayer);
         inkCanvas.clearColor();
@@ -369,7 +378,8 @@ public class CreateActivityFragment extends Fragment {
             }
             doc.recycle();
         } catch (WILLFormatException e) {
-            throw new WILLException("Can't read the sample.will file. Reason: " + e.getLocalizedMessage() + " / Check stacktrace in the console.");
+            throw new WILLException("Can't read the sample.will file. Reason: " +
+                    e.getLocalizedMessage() + " / Check stacktrace in the console.");
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
@@ -422,7 +432,8 @@ public class CreateActivityFragment extends Fragment {
             new WILLWriter(willFile).write(willDoc);
             willDoc.recycle();
         } catch (WILLFormatException e){
-            throw new WILLException("Can't write the sample.will file. Reason: " + e.getLocalizedMessage() + " / Check stacktrace in the console.");
+            throw new WILLException("Can't write the sample.will file. Reason: " +
+                    e.getLocalizedMessage() + " / Check stacktrace in the console.");
         }
     }
 
@@ -432,7 +443,6 @@ public class CreateActivityFragment extends Fragment {
     }
 
     protected void switchToEraser(){
-
         pathBuilder = new SpeedPathBuilder();
         pathBuilder.setNormalizationConfig(100.0f, 4000.0f);
         pathBuilder.setMovementThreshold(2.0f);

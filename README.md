@@ -13,7 +13,7 @@ Will App Functionality
 
 
 ##Note
- Create strokes - done with bug
+ Create strokes - done
 
  Manipulate Strokes - erase whole strokes using WILL's intersector - done
 

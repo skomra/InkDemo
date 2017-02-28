@@ -6,4 +6,5 @@
     <string name="really_delete">Really Delete</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
+    <string name="import_file">Import File</string>
 </resources>

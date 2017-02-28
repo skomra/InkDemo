@@ -327,9 +327,15 @@ public class CreateActivityFragment extends Fragment {
         mUri = uri;
     }
 
+    /**
+     * if we opened a file use that file else we need to generate a new filename
+     * //FIXME this is ugly but this is just a demo app.
+     *
+     * @return
+     */
     private File getFilePathFromUri(){
-
         if (mUri != null) {
+            Log.i(TAG, "getting file mUri " + mUri);
             Cursor query = getActivity().getApplicationContext().getContentResolver().query(mUri, null, null, null, null);
             //DatabaseUtils.dumpCursor(query);
             int index_of_name = query.getColumnIndex(NoteContract.NoteEntry.COLUMN_NAME);
@@ -378,7 +384,10 @@ public class CreateActivityFragment extends Fragment {
             }
             doc.recycle();
         } catch (WILLFormatException e) {
-            throw new WILLException("Can't read the sample.will file. Reason: " +
+            //throw new WILLException(
+            //FIXME tell the user
+            //FIXME this will end up clobbering the bad file
+                    Log.e(TAG, "Can't read the .will file. Reason: " +
                     e.getLocalizedMessage() + " / Check stacktrace in the console.");
         } catch (FileNotFoundException e) {
             e.printStackTrace();

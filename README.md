@@ -25,7 +25,8 @@ Will App Functionality
 
  Notes loaded from disk when opened - done
 
- Import a WILL File from filesystem - not done
+ Import a WILL File from filesystem - done
+ - Example WILL file for importing - https://github.com/skomra/InkDemo/blob/master/sample.will
 
  Delete WILL files - done 
 

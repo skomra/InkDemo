@@ -1,6 +1,7 @@
 package com.wacom.skomra.inkdemo;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.DataSetObserver;
@@ -8,7 +9,9 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Path;
 import android.media.ThumbnailUtils;
+import android.provider.UserDictionary;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -68,7 +71,7 @@ public class MyNoteRecyclerViewAdapter  extends RecyclerView.Adapter<MyNoteRecyc
             int index_doc_name = cursor.getColumnIndex(NoteContract.NoteEntry.COLUMN_NAME);
             //int index_thumbnail = cursor.getColumnIndex(NoteContract.NoteEntry.COLUMN_THUMBNAIL);
 
-            String name = cursor.getString(index_doc_name);
+            final String name = cursor.getString(index_doc_name);
             id = cursor.getInt(index_id);
 
             String pic_filename = cursor.getString(index_doc_name);
@@ -94,9 +97,45 @@ public class MyNoteRecyclerViewAdapter  extends RecyclerView.Adapter<MyNoteRecyc
                 }
             });
 
+            holder.mView.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View view) {
+                    new AlertDialog.Builder(mContext)
+                            .setIcon(android.R.drawable.ic_dialog_alert)
+                            .setTitle(R.string.delete)
+                            .setMessage(R.string.really_delete)
+                            .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    deleteListItem(name);
+                                }
+                            })
+                            .setNegativeButton(R.string.no, null)
+                            .show();
+                    return true;
+                }
+            });
+
         } else {
             Log.i(TAG, "onbindviewholder " + b);
         }
+    }
+
+    private void deleteListItem(String name){
+        File file = new File(name);
+        //delete from db
+        String where = "name=?";
+        String[] args = {name,};
+
+        int rowsDeleted = mContext.getContentResolver().delete(
+                NoteContract.NoteEntry.getNotesUri(),
+                where,
+                args);
+
+        file.delete();
+        this.notifyDataSetChanged();
+        Log.i(TAG, " " + name + " deleted x" + rowsDeleted);
     }
 
     //Based on https://developer.android.com/training/displaying-bitmaps/load-bitmap.html

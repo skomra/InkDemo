@@ -331,7 +331,7 @@ public class CreateActivityFragment extends Fragment {
 
         if (mUri != null) {
             Cursor query = getActivity().getApplicationContext().getContentResolver().query(mUri, null, null, null, null);
-            DatabaseUtils.dumpCursor(query);
+            //DatabaseUtils.dumpCursor(query);
             int index_of_name = query.getColumnIndex(NoteContract.NoteEntry.COLUMN_NAME);
             query.moveToFirst();
             String name = query.getString(index_of_name);

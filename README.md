@@ -27,7 +27,7 @@ Will App Functionality
 
  Import a WILL File from filesystem - not done
 
- Delete WILL files - maybe not necessary
+ Delete WILL files - done 
 
 
 ##Serialize
